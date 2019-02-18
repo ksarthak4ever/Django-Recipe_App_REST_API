@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+ project:
+   build:
+     context: .
+   ports:
+     - "8000:8000"
+   volumes:
+     - ./project:/project
+   command: >
+     sh -c "python manage.py runserver 0.0.0.0:8000"
