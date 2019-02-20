@@ -1,12 +1,27 @@
-version: '3'
+version: '3' #version of docker compose
 
-services:
- project:
+services:  
+ project: #main project service
    build:
-     context: .
+    context: .
    ports:
-     - "8000:8000"
+    - "8000:8000"
    volumes:
-     - ./project:/project
+    - ./project:/project
    command: >
-     sh -c "python manage.py runserver 0.0.0.0:8000"
+    sh -c "python manage.py runserver 0.0.0.0:8000"
+   environment: #https://docs.docker.com/compose/environment-variables/
+    - DB_HOST=db
+    - DB_NAME=recipe
+    - DB_USER=postgres
+    - DB_PASS=randompassword
+   depends_on: #depends on setting as in docker compose we can set different services to depend on other services,here we want our project service to depend on db service which means db service will start before the project service and db service will be available via a network when we use HOST name db in env variables which will connect to whatever container is working on our db service.
+    - db
+
+
+ db: #database service. https://hub.docker.com/_/postgres/
+  image: postgres:10-alpine #this locates the postgres image on dockerhub and pulls down the version that is 10 alpine
+  environment:
+    - POSTGRES_DB = recipe
+    - POSTGRES_USER = postgres
+    - POSTGRES_PASSWORD = randompassword #for production we would use encrypted environment variable(see my blog about that)
