@@ -9,7 +9,9 @@ services:
    volumes:
     - ./project:/project
    command: >
-    sh -c "python manage.py runserver 0.0.0.0:8000"
+    sh -c "python manage.py wait_for_db && 
+           python manage.py migrate &&
+           manage.py runserver 0.0.0.0:8000"
    environment: #https://docs.docker.com/compose/environment-variables/
     - DB_HOST=db
     - DB_NAME=recipe
