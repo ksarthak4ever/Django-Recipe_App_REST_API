@@ -37,7 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken', #for authentication using tokens
     'core',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -69,7 +72,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'project.wsgi.application'
-
+#using environment variable of docker-compose file.Useful as we can easily change our configurations when we run our app on diff servers by simply changing them in the environment variables and no need to make changes to source code.
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
