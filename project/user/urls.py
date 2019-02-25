@@ -2,10 +2,13 @@ from django.urls import path
 
 from user import views
 
+# Define our app name to help ID which app we're creating the URL from
+# when we use our reverse()
+app_name = 'user'
 
-app_name = 'user' #app_name is set to identify which app we are creating the url from when we use our reverse function
 
 urlpatterns = [
-	path('create/', views.CreateUserView.as_view(), name='create'),
-	path('token/', views.CreateUserView.as_view(), name='token'),
+    path('create/', views.CreateUserView.as_view(), name='create'),
+    path('token/', views.CreateTokenView.as_view(), name='token'),
+    path('me/', views.ManageUserView.as_view(), name='me'), #i.e url for account of user that is authenticated 
 ]

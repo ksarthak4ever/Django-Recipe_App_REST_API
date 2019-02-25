@@ -1,40 +1,54 @@
 from django.contrib.auth import get_user_model, authenticate
-from django.utils.translation import ugettext_lazy as _ #whenever we output any msgs in the python code that are gonna be outputted in the screen its good idea to pass them through this translation system,so if we add any new languages to the project we can easily add the language file and it will automatically convert all the texts to the correct language
+from django.utils.translation import ugettext_lazy as _ # for outputting messages to screen. Supports multiple languages
 
 from rest_framework import serializers
 
 
-class UserSerializer(serializers.ModelSerializer): #Serializer for the users object. https://www.django-rest-framework.org/api-guide/serializers/#modelserializer
-	
-	class Meta:
-		model = get_user_model() #specifying the model we want to base the ModelSerializer from
-		fields = ('email', 'password', 'name')
-		extra_kwargs = {'password': {'write_only':True, 'min_length': 5}} #extra_kwargs allows us to configure few extra settings in our ModelSerializer,here making sure password is write only and more than 5 characters.
+class UserSerializer(serializers.ModelSerializer): #Serializer for the user object # Create a new serializer that inherits from ModelSerializer
 
-	def create(self, validated_data): #create a new user with encrypted password and return it
-		return get_user_model().objects.create_user(**validated_data) # ** is used to unwing the validated_data into the parameters of the create_user function . 
-																		#validated_data is all the data that was passed in the serializer i.e JSON data made in the http post.
+    class Meta:
+        model = get_user_model() #specifying the model we want to base the ModelSerializer from
+        fields = ('email', 'password', 'name') # Specify the fields to include in the serializer. These are the fields that will be converted to/from JSON when make our HTTP POST,retrieve in our view, then save to our model
+        extra_kwargs = {'password': {'write_only': True, 'min_length': 5}} #extra_kwargs allows us to configure few extra settings in our Serializer,here making sure password is write only and more than 5 characters.
+
+    def create(self, validated_data): #Create a new user with encrypted password and return it
+        return get_user_model().objects.create_user(**validated_data) # Call our custom create_user() function in order to create encrypted password for the new user. Use **validated_data to unwind validated_data into the params of create_user()
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None) #taking password out from validated data and removing it afterwards
+        user = super().update(instance, validated_data) 
+
+        # Set password if user provides one
+        if password:
+            user.set_password(password) #using set_password for encryption purpose
+            user.save()
+
+        return user
 
 
-class AuthTokenSerializer(serializers.Serializer): #Serializer for the user authenticate object
-	email = serializers.CharField()
-	password = serializers.CharField(
-		style = { 'input_type': 'password'},
-		trim_whitespace=False
-	)
+class AuthTokenSerializer(serializers.Serializer): #Serializer for the user authentication object
+    email = serializers.CharField()
+    password = serializers.CharField(
+        style={'input_type': 'password'},
+        trim_whitespace=False
+    )
 
-	def validate(self, attrs): #Validating and authenticating the user. attrs attribute here is any field that makes up our serializer 
-		email = attrs.get('email')
-		password = attrs.get('password')
-
-		user = authenticate(
-			request = self.context.get('request'),
-			username = email,
-			password = password
-		)
-		if not user:
-			msg = ('Unable to authenticate with provided credentials')
-			raise serializers.ValidationError(msg, code='authentication')
-
-		attrs['user'] = user
-		return attrs         #Note when we are overwriting the validate function we must return the values at the end once the validation is successful
+    def validate(self, attrs):
+        """Validate and authenticate the user"""
+        # Retrieve email and password from attrs DICT
+        email = attrs.get('email')
+        password = attrs.get('password')
+        # Validate whether to pass/fail by using authenticate. See notes.
+        user = authenticate(
+            request=self.context.get('request'),
+            username=email,
+            password=password
+        )
+        # When authentication fails display message and error to user
+        if not user:
+            msg = _("Unable to authenticate with provided credentials")
+            raise serializers.ValidationError(msg, code='authentication')
+        # Authentication passes so set attrs['user'] to user object
+        attrs['user'] = user
+        # Must return values(i.e attrs) at end when whenever overriding validate()
+        return attrs
