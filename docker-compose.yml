@@ -1,29 +1,48 @@
-version: '3' #version of docker compose
+# Version of docker compose we're writing our file for
+version: "3"
 
-services:  
- project: #main project service
-   build:
-    context: .
-   ports:
-    - "8000:8000"
-   volumes:
-    - ./project:/project
-   command: >
-    sh -c "python manage.py wait_for_db && 
-           python manage.py migrate &&
-           manage.py runserver 0.0.0.0:8000"
-   environment: #https://docs.docker.com/compose/environment-variables/
-    - DB_HOST=db
-    - DB_NAME=recipe
-    - DB_USER=postgres
-    - DB_PASS=randompassword
-   depends_on: #depends on setting as in docker compose we can set different services to depend on other services,here we want our project service to depend on db service which means db service will start before the project service and db service will be available via a network when we use HOST name db in env variables which will connect to whatever container is working on our db service.
-    - db
+# Define the services that make up our application
+services:
+  # Name of our service
+  project:
+    # Build section of configuration
+    build:
+      # Set context to current working directory
+      context: .
+    # Set the ports configuration
+    ports:
+      - "8000:8000"
+    # Add a volume. This allows us to push updates to Docker image in real time
+    # Maps a volume from local machine into Docker container that will be running our application
+    # Don't need to restart Docker after you make changes
+    volumes:
+      - ./project:/project
+    # Command used to run our application in our Docker container. Use ">" to line break
+    # Runs Django development server available on all IP addresses that run on the Docker
+    # container. Will run on port 8000, which is mapped to "ports" configuration to our 
+    # local machine. We can now run our app and connect to it on port 8000 on local machine
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    # Set environment variables and depends_on on new db service
+    environment: 
+      - DB_HOST=db
+      - DB_NAME=recipe
+      - DB_USER=postgres
+      - DB_PASS=randompassword
+    # Set our app service to depend on db service. db service will start before app.
+    # And now db service available via network when use hostname=db
+    depends_on: 
+      - db
 
 
- db: #database service. https://hub.docker.com/_/postgres/
-  image: postgres:10-alpine #this locates the postgres image on dockerhub and pulls down the version that is 10 alpine
-  environment:
-    - POSTGRES_DB = recipe
-    - POSTGRES_USER = postgres
-    - POSTGRES_PASSWORD = randompassword #for production we would use encrypted environment variable(see my blog about that)
+  db: 
+    # locate the postgres image on DockerHub and pulls down version with tag "11-alpine"
+    # NOTE: Instructor ran with "10-alpine" but latest was "11-alpine" so I tried it.
+    image: postgres:11-alpine
+    # Set some environment variables
+    environment: 
+      - POSTGRES_DB=recipe
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=randompassword

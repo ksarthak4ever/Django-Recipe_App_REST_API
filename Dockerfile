@@ -1,33 +1,42 @@
-FROM python:3.7-alpine 
-#as in docker you can use images on top of images so using this image here as alpine image is lightweight version of docker
-MAINTAINER Sarthak Kumar ksarthak4ever.
+# -- Image you are going to inherit
+FROM python:3.7-alpine
+# (optional) Who's maintaining the project
+MAINTAINER Sarthak Kumar ksarthak4ever
 
-ENV PYTHONUNBUFFERED 1 #telling python to run unbuffered
+# Set the Python unbuffered environment variable
+# Recommended when running Python within Docker containers
+# It doesn't allow Python to buffer the outputs. Just prints directly.
+# This avoids complications with Docker image when running your Python app.
+ENV PYTHONUNBUFFERED 1
 
-# Install dependencies
-COPY ./requirements.txt /requirements.txt 
-#i.e copying requirement file we create here and copying it to docker image
-
-#installing dependencies for postgres
+# -- Store our dependencies in a requirements.txt file and copy to docker image
+COPY ./requirements.txt /requirements.txt
+# Encountered a WARNING after building. Need to add this line before postgresql
+RUN apk update
+# Add dependencies so we can install the psycopg2 package for Django/Postgres
 RUN apk add --update --no-cache postgresql-client
-#what it does is it uses the package manager that comes with alpine i.e apk and we add a package,--update means update registry before we add it, --no-cache means dont store registry index on our dockerfile we do this to minimize the no of extra files and packages that are included in our docker container, so the docker container for our app/project has smallest footprint possible And it also means we don't include any extra dependencies or anything on your system which may cause unexpected side effects or it may even create security vulnerabilities in your system. 
-
-RUN apk add --update --no-cache --virtual .tmp-build-deps gcc libc-dev linux-headers postgresql-dev
-#virtual sets up an alias for our temp dependencies so its easier to delete in the future
-
-RUN pip install -r /requirements.txt 
-#installing req file we just copied into the docker image
-
+# Add temp packages needed to install requirements. Assigning alias
+RUN apk add --update --no-cache --virtual .tmp-build-deps \
+  gcc libc-dev linux-headers postgresql-dev
+# -- Installs our requirements into the Docker image
+RUN pip install -r /requirements.txt
+# Delete the temporary dependencies we just added
 RUN apk del .tmp-build-deps
-#deletes temporary builds
 
-# Setup directory structure
+# -- Make a directory inside our image to store our application's source code
 RUN mkdir /project
-WORKDIR /project 
-#so that any application we run using our docker container will run starting from this location
-COPY ./project/ /project 
-#copies code from our local machine to the docker image
+# -- Switch to this new directory (like cd basically) and set as default
+# Any application we run from the Docker container will run from this directory
+WORKDIR /project
+# -- Copies from local machine /app folder to the /app folder on our image. 
+# This allows us to copy our code we create and copy to our Docker image.
+COPY ./project/ /project
 
-RUN adduser -D user 
-#for security purposes we try avoiding using root user and create a seperate user
-USER user 
+# -- Create a user that is going to run our application using Docker
+# The "-D" specifies that the user will ONLY run our process from our project.
+RUN adduser -D user
+# -- Switches Docker to the user we just created. This is for security. Limits their scope.
+# If we don't use this then the image will run using the root account.
+# That means if somebody compromises our application they can have root access
+# to the whole image. 
+USER user
