@@ -7,7 +7,7 @@ from core.models import Tag
 from recipe import serializers
 
 
-class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin): #Manage tags in the database
+class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin): #Manage tags in the database
 	authentication_classes = (TokenAuthentication,)
 	permission_classes = (IsAuthenticated,)
 	queryset = Tag.objects.all() #as ListModelMixin require queryset to be passed
@@ -15,3 +15,6 @@ class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin): #Manage tags i
 
 	def get_queryset(self): #Return objects for the current authenticated user only
 		return self.queryset.filter(user=self.request.user).order_by('-name')
+
+	def perform_create(self, serializer): #Create a new tag. The perform_create function allows us to hook into the create process when creating an object i.e what happens is when we do a create object in our viewset this function gets invoked and the validated serializer will be passed in as a serializer argument
+		serializer.save(user=self.request.user)
