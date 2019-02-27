@@ -7,27 +7,22 @@ from core.models import Tag, Ingredient
 from recipe import serializers
 
 
-class TagViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin): #Manage tags in the database
+class BaseRecipeAttrViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin): #Base viewset for user owned recipe attributes.Creating base class to reduce code duplicacy and as i'm making this api in Test Driven Development i can do this without worry of breaking the code.
 	authentication_classes = (TokenAuthentication,)
 	permission_classes = (IsAuthenticated,)
+
+	def get_queryset(self): #Return objects for current authenticated user
+		return self.queryset.filter(user=self.request.user).order_by('-name')
+
+	def perform_create(self, serializer): #Create a new object. The perform_create function allows us to hook into the create process when creating an object i.e what happens is when we do a create object in our viewset this function gets invoked and the validated serializer will be passed in as a serializer argument
+		serializer.save(user=self.request.user)
+
+
+class TagViewSet(BaseRecipeAttrViewSet): #Manage tags in the database. Inheriting BaseRecipeAttrViewSet class to reduce code duplicacy
 	queryset = Tag.objects.all() #as ListModelMixin require queryset to be passed
 	serializer_class = serializers.TagSerializer
 
-	def get_queryset(self): #Return objects for the current authenticated user only
-		return self.queryset.filter(user=self.request.user).order_by('-name')
 
-	def perform_create(self, serializer): #Create a new tag. The perform_create function allows us to hook into the create process when creating an object i.e what happens is when we do a create object in our viewset this function gets invoked and the validated serializer will be passed in as a serializer argument
-		serializer.save(user=self.request.user)
-
-
-class IngredientViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin): #Manage ingredients in the database
-	authentication_classes = (TokenAuthentication,)
-	permission_classes = (IsAuthenticated,)
-	queryset = Ingredient.objects.all()
+class IngredientViewSet(BaseRecipeAttrViewSet): #Manage ingredients in the database
+	queryset = Ingredient.objects.all() #as ListModelMixin require queryset to be passed
 	serializer_class = serializers.IngredientSerializer
-
-	def get_queryset(self): #Return objects for the current authenticated user
-		return self.queryset.filter(user=self.request.user).order_by('-name')
-
-	def perform_create(self, serializer): #Creating a new ingredient
-		serializer.save(user=self.request.user)
