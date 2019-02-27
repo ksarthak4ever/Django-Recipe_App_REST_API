@@ -1,6 +1,12 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model #as if we directly import user model then if we want to make changes in the future to the user model then it will be tricky and importing get_user_model can help in this as we just have to make changes at one place and change all the references of the user model
 
+from core import models #importing models from core app
+
+
+def sample_user(email='ksarthak4ever@gmail.com', password='randompassword'): #creating a sample user
+	return get_user_model().objects.create_user(email, password)
+
 
 
 class ModelTests(TestCase):
@@ -36,4 +42,13 @@ class ModelTests(TestCase):
 		)
 
 		self.assertTrue(user.is_superuser)
-		self.assertTrue(user.is_staff)		
+		self.assertTrue(user.is_staff)
+
+
+	def test_tag_str(self): #Test the tag string representation i.e test that creates a tag and verifies that it converts to the correct string representation
+		tag = models.Tag.objects.create(
+			user=sample_user(),
+			name='Vegan'
+			)
+		self.assertEqual(str(tag), tag.name)
+

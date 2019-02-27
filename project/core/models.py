@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
+from django.conf import settings #as we want to use AUTH_USER_MODEL to apply foreign key.https://docs.djangoproject.com/en/2.1/ref/models/fields/#django.db.models.ForeignKey
 
 class UserManager(BaseUserManager): #to pull in all features of BaseUserManager and override some functions to handle our email instead of username
 
@@ -29,3 +29,14 @@ class User(AbstractBaseUser, PermissionsMixin): #custom user model that supports
 	objects = UserManager() #assigning UserManager to the objects attribute i.e UserManager runs for every new object or new User
 
 	USERNAME_FIELD = 'email' #so we can use email as a field to login
+
+
+class Tag(models.Model): # Tag to be used for a recipe
+	name = models.CharField(max_length=255)
+	user = models.ForeignKey(
+		settings.AUTH_USER_MODEL,
+		on_delete = models.CASCADE, #as when we delete the user we delete the tags as well
+	) #assigning foreign key to the User object.
+
+	def __str__(self): #using dunder method to add string rep of the model
+		return self.name
