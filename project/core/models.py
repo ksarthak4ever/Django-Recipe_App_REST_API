@@ -26,7 +26,7 @@ class User(AbstractBaseUser, PermissionsMixin): #custom user model that supports
 	is_active = models.BooleanField(default=True)
 	is_staff = models.BooleanField(default=False)
 
-	objects = UserManager() #assigning UserManager to the objects attribute i.e UserManager runs for every new object or new User
+	objects = UserManager() #assigning UserManager to the objects attribute i.e UserManager runs for every new object or new User.
 
 	USERNAME_FIELD = 'email' #so we can use email as a field to login
 
@@ -51,3 +51,20 @@ class Ingredient(models.Model): #Ingredient to be used in a recipe
 
 	def __str__(self):
 		return self.name
+
+
+class Recipe(models.Model): #Recipe model/object
+	user = models.ForeignKey(
+			settings.AUTH_USER_MODEL,
+			on_delete = models.CASCADE
+		)
+	title = models.CharField(max_length=255)
+	time_minutes = models.IntegerField()
+	price = models.DecimalField(max_digits=5, decimal_places=2)
+	link = models.CharField(max_length=255, blank=True)
+	ingredients = models.ManyToManyField('Ingredient')
+	tags = models.ManyToManyField('Tag') #using ManyToManyField as many recipes can have many tags and ingredients. ManyToManyField is like ForeignKey.
+										 #Note- Placed the name of class/model Tag in string i.e '' if we dont do this then we need to make sure that model/class is above our current class/model which can turn tricky once we have too many models.
+	def __str__(self) :
+		return self.title
+
