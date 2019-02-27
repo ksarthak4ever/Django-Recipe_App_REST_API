@@ -58,5 +58,21 @@ class PrivateIngredientsApiTest(TestCase): #Test the private ingredients api
 		self.assertEqual(len(res.data),1 )
 		self.assertEqual(res.data[0]['name'], ingredient.name)
 
+	def test_create_ingredient_successful(self): #Testing create a new ingredient
+		payload = { 'name': 'Cabbage' }
+		self.client.post(INGREDIENTS_URL, payload)
+
+		exists = Ingredient.objects.filter(
+			user = self.user,
+			name = payload['name'],
+		).exists() #chechking if ingredient exists. exists() function will return boolean true or false value
+		self.assertTrue(exists)
+
+	def test_create_ingredient_invalid(self): #Test creating invalid ingredient/input fails
+		payload = {'name': ''}
+		res = self.client.post(INGREDIENTS_URL,payload)
+
+		self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 
