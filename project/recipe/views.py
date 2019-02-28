@@ -15,7 +15,12 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixi
 	permission_classes = (IsAuthenticated,)
 
 	def get_queryset(self): #Return objects for current authenticated user
-		return self.queryset.filter(user=self.request.user).order_by('-name')
+		assigned_only = bool(self.request.query_params.get('assigned_only'))
+		queryset = self.queryset
+		if assigned_only:
+			queryset = queryset.filter(recipe__isnull=False) #since django will allow us to access the field of the reverse relationship on ingredient and tag by the lowercase version of the classname i.e recipe to access Recipe model class and isnull is used to filter out all the null values
+
+		return queryset.filter(user=self.request.user).order_by('-name')
 
 	def perform_create(self, serializer): #Create a new object. The perform_create function allows us to hook into the create process when creating an object i.e what happens is when we do a create object in our viewset this function gets invoked and the validated serializer will be passed in as a serializer argument
 		serializer.save(user=self.request.user)
@@ -37,8 +42,21 @@ class RecipeViewSet(viewsets.ModelViewSet): #Manage recipes in the database
 	authentication_classes = (TokenAuthentication,)
 	permission_classes = (IsAuthenticated,)
 
+	def _params_to_ints(self, qs): #Convert a list of string IDS to a list of integers.To filter Recipes.
+		return [int(str_id) for str_id in qs.split(',')] #runs qs.split fn and that would return a list of strings split up by ,
+
 	def get_queryset(self): #Retrieve the recipes for the authenticated user
-		return self.queryset.filter(user=self.request.user)
+		tags =self.request.query_params.get('tags') #i.e if we have provided tags as a query_params or query string then it will be assigned to tags variable
+		ingredients = self.request.query_params.get('ingredients')
+		queryset = self.queryset
+		if tags:
+			tag_ids = self._params_to_ints(tags)
+			queryset = queryset.filter(tags__id__in=tag_ids) #this is basically django syntax for filtering on foreign key objects.Double underscore used.
+		if ingredients:
+			ingredient_ids = self._params_to_ints(ingredients)
+			queryset = queryset.filter(ingredients__id__in=ingredient_ids)
+
+		return queryset.filter(user=self.request.user)
 
 	def get_serializer_class(self): #Return appropriate serializer class. From DRF documentation:~https://www.django-rest-framework.org/api-guide/generic-views/#get_serializer_classself
 		if self.action == 'retrieve':
@@ -51,7 +69,7 @@ class RecipeViewSet(viewsets.ModelViewSet): #Manage recipes in the database
 	def perform_create(self, serializer): #Create a new Recipe
 		serializer.save(user=self.request.user)
 
-	@action(methods=['POST'], detail=True, url_path='upload-image')
+	@action(methods=['POST'], detail=True, url_path='upload-image') # https://www.django-rest-framework.org/api-guide/viewsets/#marking-extra-actions-for-routing
 	def upload_image(self, request, pk=None): #Upload an image to a recipe
 		recipe = self.get_object()
 		serializer = self.get_serializer(
