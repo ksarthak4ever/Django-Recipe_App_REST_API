@@ -35,3 +35,7 @@ class RecipeSerializer(serializers.ModelSerializer): #Serializer for recipe
 		fields = ('id', 'title', 'ingredients', 'tags', 'time_minutes', 'price', 'link')
 		read_only_fields = ('id',)
 
+
+class RecipeDetailSerializer(RecipeSerializer): #Serialize a recipe detail. Inheriting RecipeSerializer.
+	ingredients = IngredientSerializer(many=True, read_only=True) #as DRF allows us to nest serializers inside serializers
+	tags = TagSerializer(many=True, read_only=True)

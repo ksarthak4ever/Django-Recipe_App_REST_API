@@ -36,3 +36,9 @@ class RecipeViewSet(viewsets.ModelViewSet): #Manage recipes in the database
 
 	def get_queryset(self): #Retrieve the recipes for the authenticated user
 		return self.queryset.filter(user=self.request.user)
+
+	def get_serializer_class(self): #Return appropriate serializer class. From DRF documentation:~https://www.django-rest-framework.org/api-guide/generic-views/#get_serializer_classself
+		if self.action == 'retrieve':
+			return serializers.RecipeDetailSerializer
+
+		return self.serializer_class
