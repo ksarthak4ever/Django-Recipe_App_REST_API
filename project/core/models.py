@@ -1,6 +1,20 @@
+import uuid #python uuid package to give each uploaded image a unique name/id
+import os #as using os.path to provide a valid path for our file destination
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.conf import settings #as we want to use AUTH_USER_MODEL to apply foreign key.https://docs.djangoproject.com/en/2.1/ref/models/fields/#django.db.models.ForeignKey
+
+
+def recipe_image_file_path(instance, filename): #Generate file path for new recipe image
+	
+	ext = filename.split('.')[-1] #stripping the extension part of the filename and storing it in variable ext
+	filename = f'{uuid.uuid4()}.{ext}'
+
+	return os.path.join('uploads/recipe/', filename)
+
+
+
 
 class UserManager(BaseUserManager): #to pull in all features of BaseUserManager and override some functions to handle our email instead of username
 
@@ -63,8 +77,9 @@ class Recipe(models.Model): #Recipe model/object
 	price = models.DecimalField(max_digits=5, decimal_places=2)
 	link = models.CharField(max_length=255, blank=True)
 	ingredients = models.ManyToManyField('Ingredient')
-	tags = models.ManyToManyField('Tag') #using ManyToManyField as many recipes can have many tags and ingredients. ManyToManyField is like ForeignKey.
-										 #Note- Placed the name of class/model Tag in string i.e '' if we dont do this then we need to make sure that model/class is above our current class/model which can turn tricky once we have too many models.
+	tags = models.ManyToManyField('Tag') #using ManyToManyField as many recipes can have many tags and ingredients. ManyToManyField is like ForeignKey.#Note- Placed the name of class/model Tag in string i.e '' if we dont do this then we need to make sure that model/class is above our current class/model which can turn tricky once we have too many models.
+	image = models.ImageField(null=True, upload_to=recipe_image_file_path) # passing reference to the function so it can be called every time we upload in the background.
+
 	def __str__(self) :
 		return self.title
 
