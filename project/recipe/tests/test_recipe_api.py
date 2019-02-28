@@ -145,3 +145,39 @@ class PrivateRecipeApiTests(TestCase): #Test authenticated recipe API access
 		self.assertIn(ingredient1, ingredients) #making sure the ingredient we created is present in recipe
 		self.assertIn(ingredient2, ingredients)
 
+	'''Tests for updating the recipes(Optional), as the update feature comes out of the box with the ModelViewSet there is no need as i am test a functionality which is already there
+		doing this just to learn how to test updating an api '''
+
+	def test_partial_update_recipe(self): #Test updating a recipe with patch.When we send a PATCH request, we only send the data which we want to update. In other words, we only send the first name to update, no need to send the last name.
+		recipe = sample_recipe(user=self.user)
+		recipe.tags.add(sample_tag(user=self.user))
+		new_tag = sample_tag(user=self.user, name='Curry')
+
+		payload = {'title': 'Chicken tikka', 'tags': [new_tag.id]}
+		url = detail_url(recipe.id)
+		self.client.patch(url, payload)
+
+		recipe.refresh_from_db() #Vital for updating as database changes need to be refreshed
+		self.assertEqual(recipe.title, payload['title'])
+		tags = recipe.tags.all()
+		self.assertEqual(len(tags), 1)
+		self.assertIn(new_tag, tags)
+
+	def test_full_update_recipe(self): #Test updating a recipe with put. with PUT request we have to send all the parameters.In other words, it is mandatory to send all values again, the full payload.
+		recipe = sample_recipe(user=self.user)
+		recipe.tags.add(sample_tag(user=self.user))
+		payload = {
+			'title': 'Spaghetti carbonara',
+			'time_minutes': 25,
+			'price': 5.00
+		}
+		url = detail_url(recipe.id)
+		self.client.put(url, payload)
+
+		recipe.refresh_from_db()
+		self.assertEqual(recipe.title, payload['title'])
+		self.assertEqual(recipe.time_minutes, payload['time_minutes'])
+		self.assertEqual(recipe.price, payload['price'])
+		tags = recipe.tags.all()
+		self.assertEqual(len(tags), 0)
+
