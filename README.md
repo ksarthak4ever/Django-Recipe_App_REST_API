@@ -22,7 +22,7 @@ This is a REST API made using Django,Django REST Framework(DRF),Docker and Test 
 
 * As i have setup the project using Docker so there is not much difficulty on how to set up the project, make sure you have Docker installed on your system.
 
-* Just go the project directory and enter command :~ `sudo docker-compose build`  This will build the docker image used to run the project.
+* Just go the project directory and enter command :~`sudo docker build .` and `sudo docker-compose build`  This will build the docker image used to run the project.
 
 * To check if all the tests are working just enter the command :~ `sudo docker-compose run --rm project sh -c "python manage.py test"
 
