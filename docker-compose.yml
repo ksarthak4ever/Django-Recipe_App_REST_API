@@ -39,7 +39,6 @@ services:
 
   db: 
     # locate the postgres image on DockerHub and pulls down version with tag "11-alpine"
-    # NOTE: Instructor ran with "10-alpine" but latest was "11-alpine" so I tried it.
     image: postgres:11-alpine
     # Set some environment variables
     environment: 
