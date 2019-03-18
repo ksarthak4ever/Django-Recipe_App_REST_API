@@ -24,7 +24,7 @@ This is a REST API made using Django,Django REST Framework(DRF),Docker and Test 
 
 * Just go the project directory and enter command :~`sudo docker build .` and `sudo docker-compose build`  This will build the docker image used to run the project.
 
-* To check if all the tests are working just enter the command :~ `sudo docker-compose run --rm project sh -c "python manage.py test"
+* To check if all the tests are working just enter the command :~ `sudo docker-compose run --rm project sh -c "python manage.py test"`
 
 * All tests should pass and then we can start the server using simply :~ `sudo docker-compose up`
 
@@ -39,4 +39,5 @@ This is a REST API made using Django,Django REST Framework(DRF),Docker and Test 
 
 * [Test Driven Development(TDD)](https://medium.com/@ksarthak4ever/test-driven-development-tdd-in-django-and-django-rest-framework-drf-a889a8068cb7)
 
+* [Docker,Dockerfile and Django](https://medium.com/@ksarthak4ever/docker-dockerfile-and-django-c959620e869d)
 
